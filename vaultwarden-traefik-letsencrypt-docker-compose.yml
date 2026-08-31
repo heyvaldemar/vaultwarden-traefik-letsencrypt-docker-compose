@@ -1,3 +1,14 @@
+# Image pins live HERE, as interpolation defaults, so `git pull` (or
+# re-downloading this file) delivers the exact version combination this
+# repository has tested — no .env editing required. Setting the matching
+# variable in .env overrides the default for anyone who wants to pin
+# differently; .env itself carries only secrets and deliberate overrides.
+# CI (Trivy scans, check-pin-freshness, the ephemeral test .env) reads
+# the pins from these lines — this block is the single source of truth.
+x-images:
+  traefik: &traefik-image ${TRAEFIK_IMAGE_TAG:-traefik:3.7@sha256:9c2a54d87f76f5c2f5f2682c68394af92fb12c0a2686798d6462a3f84bd78eaf}
+  vaultwarden: &vaultwarden-image ${VAULTWARDEN_IMAGE_TAG:-vaultwarden/server:1.37.2@sha256:094b5689ed81549bd293418395c7cf495ae9d960fc2d4928cef2083ef913d912}
+
 networks:
   vaultwarden-network:
     external: true
@@ -10,12 +21,12 @@ volumes:
 
 services:
   vaultwarden:
-    image: ${VAULTWARDEN_IMAGE_TAG}
+    image: *vaultwarden-image
     volumes:
       - vaultwarden-data:/data
     environment:
       WEBSOCKET_ENABLED: 'true'
-      SIGNUPS_ALLOWED: ${VAULTWARDEN_SIGNUPS_ALLOWED}
+      SIGNUPS_ALLOWED: ${VAULTWARDEN_SIGNUPS_ALLOWED:-true}
     networks:
       - vaultwarden-network
       - traefik-network
@@ -29,7 +40,7 @@ services:
       # Enable Traefik for this container
       - "traefik.enable=true"
       # Match incoming requests on a specific hostname
-      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_HOSTNAME}`)"
+      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_HOSTNAME:?set in .env - see .env.example}`)"
       # Assign the router to a named Traefik service
       - "traefik.http.routers.vaultwarden.service=vaultwarden"
       # Use the 'websecure' (HTTPS) entry point
@@ -54,10 +65,10 @@ services:
         condition: service_healthy
 
   traefik:
-    image: ${TRAEFIK_IMAGE_TAG}
+    image: *traefik-image
     command:
       # Set the log level (DEBUG, INFO, WARN, ERROR)
-      - "--log.level=${TRAEFIK_LOG_LEVEL}"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-WARN}"
       # Enable the built-in API and web-based dashboard
       - "--api.dashboard=true"
       # Enable the /ping endpoint so we can health-check Traefik
@@ -82,7 +93,7 @@ services:
       # Use ACME (Let's Encrypt) to generate/renew certificates via TLS challenge
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       # The email address used by Let's Encrypt for renewal notices
-      - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:?set in .env - see .env.example}"
       # The file where ACME certificates are stored inside the container
       - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json"
       # Enable Prometheus metrics
@@ -111,14 +122,14 @@ services:
       # Enable Traefik for this container
       - "traefik.enable=true"
       # A router to expose the Traefik dashboard
-      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME}`)"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOSTNAME:?set in .env - see .env.example}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.routers.dashboard.service=api@internal"
       # Basic Authentication for the Traefik dashboard
       - "traefik.http.routers.dashboard.middlewares=authtraefik"
-      - "traefik.http.middlewares.authtraefik.basicauth.users=${TRAEFIK_BASIC_AUTH}"
+      - "traefik.http.middlewares.authtraefik.basicauth.users=${TRAEFIK_BASIC_AUTH:?set in .env - see .env.example for htpasswd generation}"
       # Specify the internal server port to the dashboard service
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
       # Pass the original Host header to the backend

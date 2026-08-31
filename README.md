@@ -1,103 +1,157 @@
-# Vaultwarden with Let's Encrypt Using Docker Compose
+# Vaultwarden + Traefik + Let's Encrypt — Docker Compose
 
-[![Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/00-deployment-verification.yml/badge.svg)](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions)
+[![Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml/badge.svg?branch=main)](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The badge displayed on my repository indicates the status of the deployment verification workflow as executed on the latest commit to the main branch.
+## Contents
 
-**Passing**: This means the most recent commit has successfully passed all deployment checks, confirming that the Docker Compose setup functions correctly as designed.
+- [Why this stack?](#why-this-stack)
+- [Prerequisites](#prerequisites)
+- [Getting started](#getting-started)
+- [Features](#features)
+- [Supply chain trust](#supply-chain-trust)
+- [Production checklist](#production-checklist)
+- [Backups](#backups)
+- [Testing](#testing)
+- [Security Notes](#security-notes)
+- [About the maintainer](#about-the-maintainer)
 
-📙 The complete installation guide is available on my [website](https://www.heyvaldemar.com/install-vaultwarden-using-docker-compose/).
+This repository deploys **Vaultwarden** (the lightweight Bitwarden-compatible server) behind **Traefik** with automatic **Let's Encrypt TLS**. One `docker compose up` away from a self-hosted password manager at `https://your-domain`, compatible with all official Bitwarden clients.
 
-❗ Change variables in the `.env` to meet your requirements.
+📙 Full narrative installation guide on the blog: [heyvaldemar.com/install-vaultwarden-using-docker-compose/](https://www.heyvaldemar.com/install-vaultwarden-using-docker-compose/).
 
-💡 Note that the `.env` file should be in the same directory as `vaultwarden-traefik-letsencrypt-docker-compose.yml`.
+## Why this stack?
 
-Create networks for your services before deploying the configuration using the commands:
+| Need | This stack | Manual install | Bitwarden official | Other compose examples |
+|------|-----------|----------------|--------------------|-----------------------|
+| Ready to deploy in <5 min | ✅ | ❌ | ❌ heavy (MSSQL etc.) | Often |
+| TLS via Let's Encrypt, auto-renewed | ✅ Traefik ACME built-in | Manual certbot | Manual | Rare |
+| Tiny footprint (~50 MB RAM) | ✅ | ✅ | ❌ | ✅ |
+| Works with official Bitwarden apps | ✅ | ✅ | ✅ | ✅ |
+| Upstream images pinned by `sha256` digest | ✅ | N/A | N/A | Rare |
+| Weekly pin-freshness check in CI | ✅ | N/A | N/A | Rare |
+| CI-verified deployment on every push | ✅ /alive answers | N/A | N/A | Rare |
 
-`docker network create traefik-network`
+Two moving parts (Traefik + Vaultwarden). No Kubernetes prerequisites, no manual certificate management.
 
-`docker network create vaultwarden-network`
+## Prerequisites
 
-Deploy Vaultwarden using Docker Compose:
+- **A Linux server** with a public IP. Vaultwarden is light — the smallest VPS works.
+- **Docker Engine 24+ and Docker Compose 2.20+.**
+- **A domain you control,** with two `A` records pointing at your server's public IP — one for Vaultwarden, one for the Traefik dashboard. DNS must propagate before deploy. Bitwarden clients require HTTPS, which this stack provides out of the box.
+- **Ports 80 and 443 open** on the server's firewall.
 
-`docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwarden up -d`
+## Getting started
 
-## Author
+```bash
+# 1. Clone
+git clone https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose
+cd vaultwarden-traefik-letsencrypt-docker-compose
 
-hey everyone,
+# 2. Create the two Docker networks the stack expects
+docker network create traefik-network
+docker network create vaultwarden-network
 
-💾 I’ve been in the IT game for over 20 years, cutting my teeth with some big names like [IBM](https://www.linkedin.com/in/heyvaldemar/), [Thales](https://www.linkedin.com/in/heyvaldemar/), and [Amazon](https://www.linkedin.com/in/heyvaldemar/). These days, I wear the hat of a DevOps Consultant and Team Lead, but what really gets me going is Docker and container technology - I’m kind of obsessed!
+# 3. Copy the environment template and fill in required values
+cp .env.example .env
+$EDITOR .env
+# ^ Required: VAULTWARDEN_HOSTNAME, TRAEFIK_HOSTNAME, TRAEFIK_ACME_EMAIL,
+#   TRAEFIK_BASIC_AUTH.
 
-💛 I have my own IT [blog](https://www.heyvaldemar.com/), where I’ve built a [community](https://discord.gg/AJQGCCBcqf) of DevOps enthusiasts who share my love for all things Docker, containers, and IT technologies in general. And to make sure everyone can jump on this awesome DevOps train, I write super detailed guides (seriously, they’re foolproof!) that help even newbies deploy and manage complex IT solutions.
+# 4. Deploy
+docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwarden up -d
+```
 
-🚀 My dream is to empower every single person in the DevOps community to squeeze every last drop of potential out of Docker and container tech.
+Within a minute `https://${VAULTWARDEN_HOSTNAME}` serves the web vault with a fresh Let's Encrypt certificate. **Register your account(s), then disable sign-ups** (see the checklist).
 
-🐳 As a [Docker Captain](https://www.docker.com/captains/vladimir-mikhalev/), I’m stoked to share my knowledge, experiences, and a good dose of passion for the tech. My aim is to encourage learning, innovation, and growth, and to inspire the next generation of IT whizz-kids to push Docker and container tech to its limits.
+### What success looks like
 
-Let’s do this together!
+```bash
+# Services healthy:
+docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwarden ps
 
-## My 2D Portfolio
+# Liveness endpoint answers with a timestamp:
+curl -fsS "https://${VAULTWARDEN_HOSTNAME}/alive"
 
-🕹️ Click into [sre.gg](https://www.sre.gg/) — my virtual space is a 2D pixel-art portfolio inviting you to interact with elements that encapsulate the milestones of my DevOps career.
+# Traefik issued a certificate:
+docker compose -p vaultwarden logs traefik | grep -i "adding certificate"
+```
 
-## My Courses
+### Common first-deploy issues
 
-🎓 Dive into my [comprehensive IT courses](https://www.heyvaldemar.com/courses/) designed for enthusiasts and professionals alike. Whether you're looking to master Docker, conquer Kubernetes, or advance your DevOps skills, my courses provide a structured pathway to enhancing your technical prowess.
+- **Cert issuance fails.** DNS hasn't propagated or port 80 isn't reachable from the internet.
+- **Mobile app refuses to connect.** The client requires a valid HTTPS URL — use the public hostname, never an IP.
+- **`network vaultwarden-network not found`.** Step 2 was skipped.
 
-🔑 [Each course](https://www.udemy.com/user/heyvaldemar/) is built from the ground up with real-world scenarios in mind, ensuring that you gain practical knowledge and hands-on experience. From beginners to seasoned professionals, there's something here for everyone to elevate their IT skills.
+### Apply `.env` or compose-file changes
 
-## My Services
+```bash
+docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwarden up -d --force-recreate
+```
 
-💼 Take a look at my [service catalog](https://www.heyvaldemar.com/services/) and find out how we can make your technological life better. Whether it's increasing the efficiency of your IT infrastructure, advancing your career, or expanding your technological horizons — I'm here to help you achieve your goals. From DevOps transformations to building gaming computers — let's make your technology unparalleled!
+## Features
 
-## Patreon Exclusives
+- **Vaultwarden** latest stable (1.37.2) — the Rust reimplementation of the Bitwarden server API; works with all official clients, browser extensions, and apps.
+- **Traefik v3** with automatic HTTP→HTTPS redirect and Let's Encrypt TLS-ALPN certificate issuance.
+- **Basic-auth protected Traefik dashboard** on a separate hostname.
+- **Sign-ups togglable** via `VAULTWARDEN_SIGNUPS_ALLOWED`.
+- **SQLite storage in a named volume** — one directory to back up.
 
-🏆 Join my [Patreon](https://www.patreon.com/heyvaldemar) and dive deep into the world of Docker and DevOps with exclusive content tailored for IT enthusiasts and professionals. As your experienced guide, I offer a range of membership tiers designed to suit everyone from newbies to IT experts.
+## Supply chain trust
 
-## My Recommendations
+This repository is a **deployment template**, not a custom Docker image. It orchestrates two upstream images:
 
-📕 Check out my collection of [essential DevOps books](https://kit.co/heyvaldemar/essential-devops-books)\
-🖥️ Check out my [studio streaming and recording kit](https://kit.co/heyvaldemar/my-studio-streaming-and-recording-kit)\
-📡 Check out my [streaming starter kit](https://kit.co/heyvaldemar/streaming-starter-kit)
+- [`traefik`](https://hub.docker.com/_/traefik) — reverse proxy, Docker Hub official image
+- [`vaultwarden/server`](https://hub.docker.com/r/vaultwarden/server) — Vaultwarden upstream
 
-## Follow Me
+Both are pinned to `tag@sha256:<digest>` as interpolation defaults in the compose file's `x-images` block — `git pull` alone delivers the version combination this repository has tested; an `*_IMAGE_TAG` variable in `.env` overrides deliberately.
 
-🎬 [YouTube](https://www.youtube.com/channel/UCf85kQ0u1sYTTTyKVpxrlyQ?sub_confirmation=1)\
-🐦 [X / Twitter](https://twitter.com/heyvaldemar)\
-🎨 [Instagram](https://www.instagram.com/heyvaldemar/)\
-🐘 [Mastodon](https://mastodon.social/@heyvaldemar)\
-🧵 [Threads](https://www.threads.net/@heyvaldemar)\
-🎸 [Facebook](https://www.facebook.com/heyvaldemarFB/)\
-🧊 [Bluesky](https://bsky.app/profile/heyvaldemar.bsky.social)\
-🎥 [TikTok](https://www.tiktok.com/@heyvaldemar)\
-💻 [LinkedIn](https://www.linkedin.com/in/heyvaldemar/)\
-📣 [daily.dev Squad](https://app.daily.dev/squads/devopscompass)\
-🧩 [LeetCode](https://leetcode.com/u/heyvaldemar/)\
-🐈 [GitHub](https://github.com/heyvaldemar)
+The weekly `check-pin-freshness` CI job re-resolves both pinned tags against their registries and compares the pinned Vaultwarden and Traefik versions against the latest upstream releases. CI runs on every push, pull request, and every Monday at 06:00 UTC. GitHub Actions are pinned by commit SHA; Dependabot keeps those fresh.
 
-## Community of IT Experts
+## Production checklist
 
-👾 [Discord](https://discord.gg/AJQGCCBcqf)
+- [ ] **Register your accounts, then set `VAULTWARDEN_SIGNUPS_ALLOWED=false`** and recreate the stack — a password manager should not accept strangers.
+- [ ] **Strong Traefik dashboard hash** — regenerate per deployment.
+- [ ] **Back up the `vaultwarden-data` volume** off-host on a schedule — it holds every vault. `sqlite3`-consistent snapshots or stopping the container briefly are both fine at this scale.
+- [ ] **Verify Let's Encrypt cert issuance** in the Traefik logs on first start.
+- [ ] **Consider fail2ban or Traefik rate-limiting** on the admin and login endpoints for internet-exposed instances.
 
-## Refill My Coffee Supplies
+## Backups
 
-💖 [PayPal](https://www.paypal.com/paypalme/heyvaldemarCOM)\
-🏆 [Patreon](https://www.patreon.com/heyvaldemar)\
-💎 [GitHub](https://github.com/sponsors/heyvaldemar)\
-🥤 [BuyMeaCoffee](https://www.buymeacoffee.com/heyvaldemar)\
-🍪 [Ko-fi](https://ko-fi.com/heyvaldemar)
+Vault data (SQLite database, attachments, keys) lives in the `vaultwarden-data` named volume. Simplest reliable backup:
 
-🌟 **Bitcoin (BTC):** bc1q2fq0k2lvdythdrj4ep20metjwnjuf7wccpckxc\
-🔹 **Ethereum (ETH):** 0x76C936F9366Fad39769CA5285b0Af1d975adacB8\
-🪙 **Binance Coin (BNB):** bnb1xnn6gg63lr2dgufngfr0lkq39kz8qltjt2v2g6\
-💠 **Litecoin (LTC):** LMGrhx8Jsx73h1pWY9FE8GB46nBytjvz8g
+```bash
+docker compose -p vaultwarden exec vaultwarden sqlite3 /data/db.sqlite3 ".backup /data/db-backup.sqlite3"
+docker cp "$(docker compose -p vaultwarden ps -q vaultwarden)":/data/db-backup.sqlite3 ./
+```
+
+Ship the copy (plus `/data/attachments` and `/data/rsa_key*` if present) to off-host storage on a schedule.
+
+## Testing
+
+The [Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml?query=branch%3Amain) workflow runs on every push, pull request, and every Monday at 06:00 UTC:
+
+1. **Lint** — actionlint on the workflow.
+2. **Trivy scans** of both pinned images (CRITICAL/HIGH, SARIF to the Security tab).
+3. **Pin freshness** (weekly/manual) — digest drift plus release-lag checks for Vaultwarden and Traefik.
+4. **Deploy-and-test** — boots the stack and requires `/alive` to answer through Traefik plus a 200 web vault page.
+
+A green run is the authoritative proof that the template deploys end-to-end.
+
+## Security Notes
+
+- No credentials ship in this repository; `.env` is gitignored and compose fails fast on missing required variables.
+- The admin panel (`/admin`) is disabled unless you set `ADMIN_TOKEN` — leave it disabled unless you need it, and protect it if you enable it.
+- Upstream image digests are pinned; the weekly freshness job flags drift loudly.
+
+---
+
+## About the maintainer
 
 <div align="center">
 
-### Show some 💜 by starring some of the [repositories](https://github.com/heyValdemar?tab=repositories)!
+**Maintained by [Vladimir Mikhalev](https://github.com/heyvaldemar)** — Docker Captain · IBM Champion · AWS Community Builder
 
-![octocat](https://user-images.githubusercontent.com/10498744/210113490-e2fad07f-4488-4da8-a656-b9abbdd8cb26.gif)
+[YouTube](https://www.youtube.com/channel/UCf85kQ0u1sYTTTyKVpxrlyQ?sub_confirmation=1) · [Blog](https://heyvaldemar.com) · [LinkedIn](https://www.linkedin.com/in/heyvaldemar/)
 
 </div>
-
-![footer](https://user-images.githubusercontent.com/10498744/210157572-1fca0242-8af2-46a6-bfa3-666ffd40ebde.svg)
