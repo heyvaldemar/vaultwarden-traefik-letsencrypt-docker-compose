@@ -118,14 +118,22 @@ The daily `check-pin-freshness` CI job re-resolves both pinned tags against thei
 
 ## Backups
 
-Vault data (SQLite database, attachments, keys) lives in the `vaultwarden-data` named volume. Simplest reliable backup:
+The `backups` container runs on a loop: an initial delay (`VAULTWARDEN_BACKUP_INIT_SLEEP`, default 30m), then every `VAULTWARDEN_BACKUP_INTERVAL` (default 24h) it takes a consistent copy of each SQLite database (`db.sqlite3`) through Python's `sqlite3` backup API - no application stop - and a `tar.gz` of the rest of the data directory (live database files excluded), into the `vaultwarden-backups` volume; files older than `VAULTWARDEN_BACKUP_PRUNE_DAYS` (default 7) are pruned. Each artefact logs `... backup OK: <file> (<bytes> bytes)` or `FAILED` (kept as `<file>.failed`) — grep the log for `FAILED` from your monitoring.
+
+**Verify backups are running:**
 
 ```bash
-docker compose -p vaultwarden exec vaultwarden sqlite3 /data/db.sqlite3 ".backup /data/db-backup.sqlite3"
-docker cp "$(docker compose -p vaultwarden ps -q vaultwarden)":/data/db-backup.sqlite3 ./
+docker compose -p vaultwarden logs backups | tail -5
+docker compose -p vaultwarden exec backups ls -la /srv/vaultwarden/backups/
 ```
 
-Ship the copy (plus `/data/attachments` and `/data/rsa_key*` if present) to off-host storage on a schedule.
+**Restore** a backup set with the interactive script (`chmod +x vaultwarden-restore-data.sh` once): it stops vaultwarden, unpacks the data archive over the data directory, restores each database from its consistent copy, and starts vaultwarden again.
+
+```bash
+./vaultwarden-restore-data.sh
+```
+
+**Off-host replication.** Backups live in a named volume on the same host — bind-mount `VAULTWARDEN_BACKUPS_PATH` to a directory covered by your off-host backup solution (restic, rclone, Borg, S3 sync).
 
 ## Unattended updates
 

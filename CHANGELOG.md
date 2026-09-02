@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _(no unreleased changes yet)_
 
+## [1.3.0] - 2026-09-02
+
+### Added
+
+- **A `backups` service** for the vault database, attachments, RSA keys and icon cache: on a loop it takes a consistent copy of each SQLite database (`db.sqlite3`) through Python's `sqlite3` backup API - no application stop - and a `tar.gz` of the rest of the data directory (live database files excluded), logs `OK` or `FAILED` per artefact (a failed archive is kept as `.failed`), and prunes only its own files. Schedule knobs (`VAULTWARDEN_BACKUP_INIT_SLEEP`, `VAULTWARDEN_BACKUP_INTERVAL`, `VAULTWARDEN_BACKUP_PRUNE_DAYS`, path and names) have defaults listed in `.env.example`.
+- **`vaultwarden-restore-data.sh`** — interactive restore of a backup set: stops vaultwarden, unpacks the data archive, restores each database copy, starts vaultwarden.
+- CI waits for the first backup cycle and proves the archives are readable and the database copy passes `PRAGMA integrity_check`.
+
 ## [1.2.0] - 2026-09-02
 
 ### Added
@@ -67,7 +75,8 @@ in [keycloak-traefik-letsencrypt-docker-compose](https://github.com/heyvaldemar/
   release lag); and a deploy-and-test job that boots the stack and
   requires `/alive` and the web vault to answer through Traefik.
 
-[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.0.0...v1.0.1

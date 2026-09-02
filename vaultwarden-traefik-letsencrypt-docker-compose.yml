@@ -18,6 +18,7 @@ networks:
 volumes:
   vaultwarden-data:
   traefik-certificates:
+  vaultwarden-backups:
 
 services:
   vaultwarden:
@@ -154,4 +155,63 @@ services:
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
       # Pass the original Host header to the backend
       - "traefik.http.services.dashboard.loadbalancer.passhostheader=true"
+    restart: unless-stopped
+
+  backups:
+    image: python:3.13-alpine@sha256:7415fbc3c9e4979cc717d92377ab2bc7b2b4a2af1ac03cc52b5f3f88efedaf3a
+    # Resource limits as .env-overridable defaults (e.g. VAULTWARDEN_BACKUPS_MEMORY_LIMIT=2g);
+    # the override survives every git pull.
+    deploy:
+      resources:
+        limits:
+          memory: ${VAULTWARDEN_BACKUPS_MEMORY_LIMIT:-256m}
+          cpus: "${VAULTWARDEN_BACKUPS_CPU_LIMIT:-0.5}"
+        reservations:
+          memory: ${VAULTWARDEN_BACKUPS_MEMORY_RESERVATION:-32m}
+          cpus: "${VAULTWARDEN_BACKUPS_CPU_RESERVATION:-0.1}"
+    # Every cycle: a consistent online copy of each SQLite database through
+    # Python's backup API (no application stop), then a tar.gz of the rest of
+    # the data directory (live database files excluded - the copies above are
+    # the consistent ones). Logs OK/FAILED per artefact; a failed archive is
+    # kept as .failed for diagnosis; retention 0 disables pruning.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sleep "$$VAULTWARDEN_BACKUP_INIT_SLEEP"
+        while true; do
+          STAMP="$$(date +%Y-%m-%d_%H-%M)"
+          for db in db.sqlite3; do
+            DB_FILE="$$VAULTWARDEN_BACKUPS_PATH/$$VAULTWARDEN_BACKUP_NAME-$${db%%.*}-$$STAMP.sqlite3"
+            echo "[$$(date -Iseconds)] Starting database backup of $$db to $$DB_FILE.gz"
+            if [ -f "/data/$$db" ] && python3 -c "import sqlite3,sys; s=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro',uri=True); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close()" "/data/$$db" "$$DB_FILE" && gzip -f "$$DB_FILE"; then
+              echo "[$$(date -Iseconds)] Database backup OK: $$DB_FILE.gz ($$(stat -c %s "$$DB_FILE.gz") bytes)"
+            else
+              echo "[$$(date -Iseconds)] Database backup FAILED - $$db could not be copied consistently" >&2
+              rm -f "$$DB_FILE" "$$DB_FILE.gz"
+            fi
+          done
+          DATA_FILE="$$VAULTWARDEN_BACKUPS_PATH/$$VAULTWARDEN_DATA_BACKUP_NAME-$$STAMP.tar.gz"
+          echo "[$$(date -Iseconds)] Starting data backup to $$DATA_FILE"
+          tar -C /data --exclude='./db.sqlite3' --exclude='./db.sqlite3-wal' --exclude='./db.sqlite3-shm' --exclude='./tmp' -zcpf "$$DATA_FILE" .; RC=$$?
+          if [ "$$RC" -eq 0 ] || [ "$$RC" -eq 1 ]; then
+            echo "[$$(date -Iseconds)] Data backup OK: $$DATA_FILE ($$(stat -c %s "$$DATA_FILE") bytes)"
+          else
+            echo "[$$(date -Iseconds)] Data backup FAILED - partial file kept as $$DATA_FILE.failed for diagnosis" >&2
+            mv "$$DATA_FILE" "$$DATA_FILE.failed" 2>/dev/null || true
+          fi
+          if [ "$${VAULTWARDEN_BACKUP_PRUNE_DAYS:-0}" -ge 1 ]; then
+            find "$$VAULTWARDEN_BACKUPS_PATH" -type f \( -name "$$VAULTWARDEN_BACKUP_NAME-*" -o -name "$$VAULTWARDEN_DATA_BACKUP_NAME-*" \) -mtime "+$$VAULTWARDEN_BACKUP_PRUNE_DAYS" -delete
+          fi
+          sleep "$$VAULTWARDEN_BACKUP_INTERVAL"
+        done
+    volumes:
+      - vaultwarden-data:/data
+      - vaultwarden-backups:${VAULTWARDEN_BACKUPS_PATH:-/srv/vaultwarden/backups}
+    environment:
+      VAULTWARDEN_BACKUP_INIT_SLEEP: ${VAULTWARDEN_BACKUP_INIT_SLEEP:-30m}
+      VAULTWARDEN_BACKUP_INTERVAL: ${VAULTWARDEN_BACKUP_INTERVAL:-24h}
+      VAULTWARDEN_BACKUP_PRUNE_DAYS: ${VAULTWARDEN_BACKUP_PRUNE_DAYS:-7}
+      VAULTWARDEN_BACKUPS_PATH: ${VAULTWARDEN_BACKUPS_PATH:-/srv/vaultwarden/backups}
+      VAULTWARDEN_BACKUP_NAME: ${VAULTWARDEN_BACKUP_NAME:-vaultwarden-database-backup}
+      VAULTWARDEN_DATA_BACKUP_NAME: ${VAULTWARDEN_DATA_BACKUP_NAME:-vaultwarden-data-backup}
     restart: unless-stopped
