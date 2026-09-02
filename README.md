@@ -106,7 +106,7 @@ This repository is a **deployment template**, not a custom Docker image. It orch
 
 Both are pinned to `tag@sha256:<digest>` as interpolation defaults in the compose file's `x-images` block — `git pull` alone delivers the version combination this repository has tested; an `*_IMAGE_TAG` variable in `.env` overrides deliberately.
 
-The weekly `check-pin-freshness` CI job re-resolves both pinned tags against their registries and compares the pinned Vaultwarden and Traefik versions against the latest upstream releases. CI runs on every push, pull request, and every Monday at 06:00 UTC. GitHub Actions are pinned by commit SHA; Dependabot keeps those fresh.
+The daily `check-pin-freshness` CI job re-resolves both pinned tags against their registries and compares the pinned Vaultwarden and Traefik versions against the latest upstream releases. CI runs on every push, pull request, and every day at 06:00 UTC. GitHub Actions are pinned by commit SHA; Dependabot keeps those fresh.
 
 ## Production checklist
 
@@ -129,11 +129,11 @@ Ship the copy (plus `/data/attachments` and `/data/rsa_key*` if present) to off-
 
 ## Testing
 
-The [Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml?query=branch%3Amain) workflow runs on every push, pull request, and every Monday at 06:00 UTC:
+The [Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml?query=branch%3Amain) workflow runs on every push, pull request, and every day at 06:00 UTC:
 
 1. **Lint** — actionlint on the workflow.
 2. **Trivy scans** of both pinned images (CRITICAL/HIGH, SARIF to the Security tab).
-3. **Pin freshness** (weekly/manual) — digest drift plus release-lag checks for Vaultwarden and Traefik.
+3. **Pin freshness** (daily/manual) — digest drift plus release-lag checks for Vaultwarden and Traefik.
 4. **Deploy-and-test** — boots the stack and requires `/alive` to answer through Traefik plus a 200 web vault page.
 
 A green run is the authoritative proof that the template deploys end-to-end.
@@ -142,7 +142,7 @@ A green run is the authoritative proof that the template deploys end-to-end.
 
 - No credentials ship in this repository; `.env` is gitignored and compose fails fast on missing required variables.
 - The admin panel (`/admin`) is disabled unless you set `ADMIN_TOKEN` — leave it disabled unless you need it, and protect it if you enable it.
-- Upstream image digests are pinned; the weekly freshness job flags drift loudly.
+- Upstream image digests are pinned; the daily freshness job flags drift loudly.
 
 ---
 
