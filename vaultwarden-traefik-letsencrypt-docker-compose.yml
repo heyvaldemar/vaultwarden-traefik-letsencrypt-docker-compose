@@ -22,6 +22,16 @@ volumes:
 services:
   vaultwarden:
     image: *vaultwarden-image
+    # Resource limits as .env-overridable defaults (e.g. VAULTWARDEN_MEMORY_LIMIT=2g);
+    # the override survives every git pull.
+    deploy:
+      resources:
+        limits:
+          memory: ${VAULTWARDEN_MEMORY_LIMIT:-512m}
+          cpus: "${VAULTWARDEN_CPU_LIMIT:-1.0}"
+        reservations:
+          memory: ${VAULTWARDEN_MEMORY_RESERVATION:-64m}
+          cpus: "${VAULTWARDEN_CPU_RESERVATION:-0.25}"
     volumes:
       - vaultwarden-data:/data
     environment:
@@ -66,6 +76,16 @@ services:
 
   traefik:
     image: *traefik-image
+    # Resource limits as .env-overridable defaults (e.g. TRAEFIK_MEMORY_LIMIT=2g);
+    # the override survives every git pull.
+    deploy:
+      resources:
+        limits:
+          memory: ${TRAEFIK_MEMORY_LIMIT:-256m}
+          cpus: "${TRAEFIK_CPU_LIMIT:-0.5}"
+        reservations:
+          memory: ${TRAEFIK_MEMORY_RESERVATION:-64m}
+          cpus: "${TRAEFIK_CPU_RESERVATION:-0.1}"
     command:
       # Set the log level (DEBUG, INFO, WARN, ERROR)
       - "--log.level=${TRAEFIK_LOG_LEVEL:-WARN}"
