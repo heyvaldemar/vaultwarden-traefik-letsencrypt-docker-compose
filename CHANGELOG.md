@@ -26,7 +26,7 @@ _(no unreleased changes yet)_
 
 ### Added
 
-- **`tests/e2e-backup-restore.sh`** — scenarios against the live stack,
+- **`tests/e2e-backup-restore.sh`**: scenarios against the live stack,
   run by CI on every push: the required-variable guard fires, a backup
   set is produced, the archive is readable, the database copy passes `PRAGMA integrity_check`, a cycle that cannot
   write its archive is reported as `FAILED`, **restore genuinely
@@ -46,7 +46,7 @@ _(no unreleased changes yet)_
 ### Added
 
 - **A `backups` service** for the vault database, attachments, RSA keys and icon cache: on a loop it takes a consistent copy of each SQLite database (`db.sqlite3`) through Python's `sqlite3` backup API - no application stop - and a `tar.gz` of the rest of the data directory (live database files excluded), logs `OK` or `FAILED` per artefact (a failed archive is kept as `.failed`), and prunes only its own files. Schedule knobs (`VAULTWARDEN_BACKUP_INIT_SLEEP`, `VAULTWARDEN_BACKUP_INTERVAL`, `VAULTWARDEN_BACKUP_PRUNE_DAYS`, path and names) have defaults listed in `.env.example`.
-- **`vaultwarden-restore-data.sh`** — interactive restore of a backup set: stops vaultwarden, unpacks the data archive, restores each database copy, starts vaultwarden.
+- **`vaultwarden-restore-data.sh`**: interactive restore of a backup set: stops vaultwarden, unpacks the data archive, restores each database copy, starts vaultwarden.
 - CI waits for the first backup cycle and proves the archives are readable and the database copy passes `PRAGMA integrity_check`.
 
 ## [1.2.0] - 2026-09-02
@@ -66,7 +66,7 @@ _(no unreleased changes yet)_
 
 ### Added
 
-- **`update.sh`** — unattended updates to the newest tagged release,
+- **`update.sh`**: unattended updates to the newest tagged release,
   and nothing else: a tag is cut only after CI has booted the pinned
   images and passed the smoke tests, so "update to the latest tag" means
   "update to a combination a machine has already run". It refuses to
@@ -78,7 +78,7 @@ _(no unreleased changes yet)_
 
 ### Added
 
-- `.env.example` — the README told you to copy it, and it did not exist.
+- `.env.example`: the README told you to copy it, and it did not exist.
   Every variable the compose file reads is documented with its default
   and a generation command where one applies.
 - This changelog, which the v1.0.0 release notes already linked to.
@@ -91,7 +91,7 @@ in [keycloak-traefik-letsencrypt-docker-compose](https://github.com/heyvaldemar/
 
 ### Changed
 
-- **Vaultwarden updated to 1.37.2** (was 1.29.1 — two years of upstream
+- **Vaultwarden updated to 1.37.2** (was 1.29.1, two years of upstream
   security fixes for a password manager) and **Traefik to v3.7** (was
   3.2, whose Docker client cannot talk to Docker Engine 29), both pinned
   by `tag@sha256:digest` in the compose `x-images` block. `git pull`

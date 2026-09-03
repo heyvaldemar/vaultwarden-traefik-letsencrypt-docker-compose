@@ -1,4 +1,4 @@
-# Vaultwarden + Traefik + Let's Encrypt — Docker Compose
+# Vaultwarden + Traefik + Let's Encrypt on Docker Compose
 
 [![Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml/badge.svg?branch=main)](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -36,9 +36,9 @@ Two moving parts (Traefik + Vaultwarden). No Kubernetes prerequisites, no manual
 
 ## Prerequisites
 
-- **A Linux server** with a public IP. Vaultwarden is light — the smallest VPS works.
+- **A Linux server** with a public IP. Vaultwarden is light: the smallest VPS works.
 - **Docker Engine 24+ and Docker Compose 2.20+.**
-- **A domain you control,** with two `A` records pointing at your server's public IP — one for Vaultwarden, one for the Traefik dashboard. DNS must propagate before deploy. Bitwarden clients require HTTPS, which this stack provides out of the box.
+- **A domain you control,** with two `A` records pointing at your server's public IP: one for Vaultwarden, one for the Traefik dashboard. DNS must propagate before deploy. Bitwarden clients require HTTPS, which this stack provides out of the box.
 - **Ports 80 and 443 open** on the server's firewall.
 
 ## Getting started
@@ -80,7 +80,7 @@ docker compose -p vaultwarden logs traefik | grep -i "adding certificate"
 ### Common first-deploy issues
 
 - **Cert issuance fails.** DNS hasn't propagated or port 80 isn't reachable from the internet.
-- **Mobile app refuses to connect.** The client requires a valid HTTPS URL — use the public hostname, never an IP.
+- **Mobile app refuses to connect.** The client requires a valid HTTPS URL: use the public hostname, never an IP.
 - **`network vaultwarden-network not found`.** Step 2 was skipped.
 
 ### Apply `.env` or compose-file changes
@@ -91,34 +91,34 @@ docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwar
 
 ## Features
 
-- **Vaultwarden** latest stable (1.37.2) — the Rust reimplementation of the Bitwarden server API; works with all official clients, browser extensions, and apps.
+- **Vaultwarden** latest stable (1.37.2), the Rust reimplementation of the Bitwarden server API; works with all official clients, browser extensions, and apps.
 - **Traefik v3** with automatic HTTP→HTTPS redirect and Let's Encrypt TLS-ALPN certificate issuance.
 - **Basic-auth protected Traefik dashboard** on a separate hostname.
 - **Sign-ups togglable** via `VAULTWARDEN_SIGNUPS_ALLOWED`.
-- **SQLite storage in a named volume** — one directory to back up.
+- **SQLite storage in a named volume**: one directory to back up.
 
 ## Supply chain trust
 
 This repository is a **deployment template**, not a custom Docker image. It orchestrates two upstream images:
 
-- [`traefik`](https://hub.docker.com/_/traefik) — reverse proxy, Docker Hub official image
-- [`vaultwarden/server`](https://hub.docker.com/r/vaultwarden/server) — Vaultwarden upstream
+- [`traefik`](https://hub.docker.com/_/traefik): reverse proxy, Docker Hub official image
+- [`vaultwarden/server`](https://hub.docker.com/r/vaultwarden/server): Vaultwarden upstream
 
-Both are pinned to `tag@sha256:<digest>` as interpolation defaults in the compose file's `x-images` block — `git pull` alone delivers the version combination this repository has tested; an `*_IMAGE_TAG` variable in `.env` overrides deliberately.
+Both are pinned to `tag@sha256:<digest>` as interpolation defaults in the compose file's `x-images` block: `git pull` alone delivers the version combination this repository has tested; an `*_IMAGE_TAG` variable in `.env` overrides deliberately.
 
 The daily `check-pin-freshness` CI job re-resolves both pinned tags against their registries and compares the pinned Vaultwarden and Traefik versions against the latest upstream releases. CI runs on every push, pull request, and every day at 06:00 UTC. GitHub Actions are pinned by commit SHA; Dependabot keeps those fresh.
 
 ## Production checklist
 
-- [ ] **Register your accounts, then set `VAULTWARDEN_SIGNUPS_ALLOWED=false`** and recreate the stack — a password manager should not accept strangers.
-- [ ] **Strong Traefik dashboard hash** — regenerate per deployment.
-- [ ] **Back up the `vaultwarden-data` volume** off-host on a schedule — it holds every vault. `sqlite3`-consistent snapshots or stopping the container briefly are both fine at this scale.
+- [ ] **Register your accounts, then set `VAULTWARDEN_SIGNUPS_ALLOWED=false`** and recreate the stack: a password manager should not accept strangers.
+- [ ] **Strong Traefik dashboard hash**: regenerate per deployment.
+- [ ] **Back up the `vaultwarden-data` volume** off-host on a schedule: it holds every vault. `sqlite3`-consistent snapshots or stopping the container briefly are both fine at this scale.
 - [ ] **Verify Let's Encrypt cert issuance** in the Traefik logs on first start.
 - [ ] **Consider fail2ban or Traefik rate-limiting** on the admin and login endpoints for internet-exposed instances.
 
 ## Backups
 
-The `backups` container runs on a loop: an initial delay (`VAULTWARDEN_BACKUP_INIT_SLEEP`, default 30m), then every `VAULTWARDEN_BACKUP_INTERVAL` (default 24h) it takes a consistent copy of each SQLite database (`db.sqlite3`) through Python's `sqlite3` backup API - no application stop - and a `tar.gz` of the rest of the data directory (live database files excluded), into the `vaultwarden-backups` volume; files older than `VAULTWARDEN_BACKUP_PRUNE_DAYS` (default 7) are pruned. Each artefact logs `... backup OK: <file> (<bytes> bytes)` or `FAILED` (kept as `<file>.failed`) — grep the log for `FAILED` from your monitoring.
+The `backups` container runs on a loop: an initial delay (`VAULTWARDEN_BACKUP_INIT_SLEEP`, default 30m), then every `VAULTWARDEN_BACKUP_INTERVAL` (default 24h) it takes a consistent copy of each SQLite database (`db.sqlite3`) through Python's `sqlite3` backup API - no application stop - and a `tar.gz` of the rest of the data directory (live database files excluded), into the `vaultwarden-backups` volume; files older than `VAULTWARDEN_BACKUP_PRUNE_DAYS` (default 7) are pruned. Each artefact logs `... backup OK: <file> (<bytes> bytes)` or `FAILED` (kept as `<file>.failed`): grep the log for `FAILED` from your monitoring.
 
 **Verify backups are running:**
 
@@ -133,7 +133,7 @@ docker compose -p vaultwarden exec backups ls -la /srv/vaultwarden/backups/
 ./vaultwarden-restore-data.sh
 ```
 
-**Off-host replication.** Backups live in a named volume on the same host — bind-mount `VAULTWARDEN_BACKUPS_PATH` to a directory covered by your off-host backup solution (restic, rclone, Borg, S3 sync).
+**Off-host replication.** Backups live in a named volume on the same host: bind-mount `VAULTWARDEN_BACKUPS_PATH` to a directory covered by your off-host backup solution (restic, rclone, Borg, S3 sync).
 
 ## Unattended updates
 
@@ -151,13 +151,13 @@ Put it on a timer for hands-off minor/patch updates:
 17 5 * * *  /opt/vaultwarden-traefik-letsencrypt-docker-compose/update.sh >> /var/log/vaultwarden-update.log 2>&1
 ```
 
-The script refuses to cross a MAJOR template version on its own — majors are breaking by definition and their release notes exist to be read. After reading them, `./update.sh --allow-major` performs the jump. It also refuses to touch a checkout with local modifications: your customization belongs in `.env`, which updates never overwrite.
+The script refuses to cross a MAJOR template version on its own. Majors are breaking by definition and their release notes exist to be read. After reading them, `./update.sh --allow-major` performs the jump. It also refuses to touch a checkout with local modifications: your customization belongs in `.env`, which updates never overwrite.
 
 This is deliberately a host-side script and not a container in the stack: an in-stack updater needs the Docker socket (root on the host) and turns "someone pushed to a repo" into "someone deployed to your machine" with no operator in the loop. A cron job under your own user updates only to tagged, CI-verified states and leaves the trust boundary where it was.
 
 ## Resource limits
 
-Every service carries memory and CPU limits plus reservations as compose-level defaults — the same values CI boots the stack under. Override any of them in `.env` (the knobs and their defaults are listed in `.env.example`, e.g. `TRAEFIK_MEMORY_LIMIT=512m`) and the override survives every `git pull`. If a service is OOM-killed under real load, `docker inspect <container> --format '{{.State.OOMKilled}}'` says so; raise its `_MEMORY_LIMIT` and recreate.
+Every service carries memory and CPU limits plus reservations as compose-level defaults, the same values CI boots the stack under. Override any of them in `.env` (the knobs and their defaults are listed in `.env.example`, e.g. `TRAEFIK_MEMORY_LIMIT=512m`) and the override survives every `git pull`. If a service is OOM-killed under real load, `docker inspect <container> --format '{{.State.OOMKilled}}'` says so; raise its `_MEMORY_LIMIT` and recreate.
 
 ## Container hardening
 
@@ -167,16 +167,16 @@ Every service runs with `security_opt: no-new-privileges:true`, so a process can
 
 The [Deployment Verification](https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/actions/workflows/deployment-verification.yml?query=branch%3Amain) workflow runs on every push, pull request, and every day at 06:00 UTC:
 
-1. **Lint** — actionlint on the workflow.
+1. **Lint**: actionlint on the workflow.
 2. **Trivy scans** of both pinned images (CRITICAL/HIGH, SARIF to the Security tab).
-3. **Pin freshness** (daily/manual) — digest drift plus release-lag checks for Vaultwarden and Traefik.
-4. **Deploy-and-test** — boots the stack and requires `/alive` to answer through Traefik plus a 200 web vault page.
+3. **Pin freshness** (daily/manual): digest drift plus release-lag checks for Vaultwarden and Traefik.
+4. **Deploy-and-test**: boots the stack and requires `/alive` to answer through Traefik plus a 200 web vault page.
 
 A green run is the authoritative proof that the template deploys end-to-end.
 
 ### Backup and restore, proven
 
-`tests/e2e-backup-restore.sh` runs against the live stack and is what CI executes after the smoke test. The scenario that matters most is the restore roundtrip: the application is stopped, the baseline database copy is put back, and a row inserted after the baseline is gone. The tests stop the application briefly and write into its data directory — run them on a staging copy with short intervals in `.env` (`VAULTWARDEN_BACKUP_INIT_SLEEP=15s`, `VAULTWARDEN_BACKUP_INTERVAL=60s`), never on production.
+`tests/e2e-backup-restore.sh` runs against the live stack and is what CI executes after the smoke test. The scenario that matters most is the restore roundtrip: the application is stopped, the baseline database copy is put back, and a row inserted after the baseline is gone. The tests stop the application briefly and write into its data directory: run them on a staging copy with short intervals in `.env` (`VAULTWARDEN_BACKUP_INIT_SLEEP=15s`, `VAULTWARDEN_BACKUP_INTERVAL=60s`), never on production.
 
 ```bash
 chmod +x tests/e2e-backup-restore.sh
@@ -186,7 +186,7 @@ chmod +x tests/e2e-backup-restore.sh
 ## Security Notes
 
 - No credentials ship in this repository; `.env` is gitignored and compose fails fast on missing required variables.
-- The admin panel (`/admin`) is disabled unless you set `ADMIN_TOKEN` — leave it disabled unless you need it, and protect it if you enable it.
+- The admin panel (`/admin`) is disabled unless you set `ADMIN_TOKEN`: leave it disabled unless you need it, and protect it if you enable it.
 - Upstream image digests are pinned; the daily freshness job flags drift loudly.
 
 ---
@@ -195,7 +195,7 @@ chmod +x tests/e2e-backup-restore.sh
 
 <div align="center">
 
-**Maintained by [Vladimir Mikhalev](https://github.com/heyvaldemar)** — Docker Captain · IBM Champion · AWS Community Builder
+**Maintained by [Vladimir Mikhalev](https://github.com/heyvaldemar)** · Docker Captain · IBM Champion · AWS Community Builder
 
 [YouTube](https://www.youtube.com/channel/UCf85kQ0u1sYTTTyKVpxrlyQ?sub_confirmation=1) · [Blog](https://heyvaldemar.com) · [LinkedIn](https://www.linkedin.com/in/heyvaldemar/)
 
