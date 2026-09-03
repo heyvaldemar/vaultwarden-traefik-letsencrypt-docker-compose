@@ -45,7 +45,7 @@ _(no unreleased changes yet)_
 - **`tests/e2e-backup-restore.sh`**: scenarios against the live stack,
   run by CI on every push: the required-variable guard fires, a backup
   set is produced, the archive is readable, the database copy passes `PRAGMA integrity_check`, a cycle that cannot
-  write its archive is reported as `FAILED`, **restore genuinely
+ write its archive is reported as `FAILED`, **restore 
   replaces the data** (the application is stopped, the baseline database copy is put back, and a row inserted after the baseline is gone), and pruning removes only old files.
 
 ## [1.3.1] - 2026-09-02
@@ -108,7 +108,7 @@ in [keycloak-traefik-letsencrypt-docker-compose](https://github.com/heyvaldemar/
 ### Changed
 
 - **Vaultwarden updated to 1.37.2** (was 1.29.1, two years of upstream
-  security fixes for a password manager) and **Traefik to v3.7** (was
+  security fixes for a password manager) and Traefik to v3.7 (was
   3.2, whose Docker client cannot talk to Docker Engine 29), both pinned
   by `tag@sha256:digest` in the compose `x-images` block. `git pull`
   delivers the tested combination; `VAULTWARDEN_IMAGE_TAG` /

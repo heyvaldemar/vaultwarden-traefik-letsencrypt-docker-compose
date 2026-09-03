@@ -16,7 +16,7 @@
 - [Security Notes](#security-notes)
 - [About the maintainer](#about-the-maintainer)
 
-This repository deploys **Vaultwarden** (the lightweight Bitwarden-compatible server) behind **Traefik** with automatic **Let's Encrypt TLS**. One `docker compose up` away from a self-hosted password manager at `https://your-domain`, compatible with all official Bitwarden clients.
+This repository deploys Vaultwarden (the lightweight Bitwarden-compatible server) behind Traefik with automatic Let's Encrypt TLS. One `docker compose up` away from a self-hosted password manager at `https://your-domain`, compatible with all official Bitwarden clients.
 
 📙 Full narrative installation guide on the blog: [heyvaldemar.com/install-vaultwarden-using-docker-compose/](https://www.heyvaldemar.com/install-vaultwarden-using-docker-compose/).
 
@@ -62,7 +62,7 @@ $EDITOR .env
 docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwarden up -d
 ```
 
-Within a minute `https://${VAULTWARDEN_HOSTNAME}` serves the web vault with a fresh Let's Encrypt certificate. **Register your account(s), then disable sign-ups** (see the checklist).
+Within a minute `https://${VAULTWARDEN_HOSTNAME}` serves the web vault with a fresh Let's Encrypt certificate. Register your account(s), then disable sign-ups (see the checklist).
 
 ### What success looks like
 
@@ -99,7 +99,7 @@ docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwar
 
 ## Supply chain trust
 
-This repository is a **deployment template**, not a custom Docker image. It orchestrates two upstream images:
+This repository is a deployment template, not a custom Docker image. It orchestrates two upstream images:
 
 - [`traefik`](https://hub.docker.com/_/traefik): reverse proxy, Docker Hub official image
 - [`vaultwarden/server`](https://hub.docker.com/r/vaultwarden/server): Vaultwarden upstream
@@ -185,7 +185,7 @@ chmod +x tests/e2e-backup-restore.sh
 ./tests/e2e-backup-restore.sh
 ```
 
-## Security Notes
+## Security notes
 
 - No credentials ship in this repository; `.env` is gitignored and compose fails fast on missing required variables.
 - The admin panel (`/admin`) is disabled unless you set `ADMIN_TOKEN`: leave it disabled unless you need it, and protect it if you enable it.
