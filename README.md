@@ -91,7 +91,7 @@ docker compose -f vaultwarden-traefik-letsencrypt-docker-compose.yml -p vaultwar
 
 ## Features
 
-- **Vaultwarden** latest stable (1.37.2), the Rust reimplementation of the Bitwarden server API; works with all official clients, browser extensions, and apps.
+- **Vaultwarden** latest stable (1.37.3), the Rust reimplementation of the Bitwarden server API; works with all official clients, browser extensions, and apps.
 - **Traefik v3** with automatic HTTP→HTTPS redirect and Let's Encrypt TLS-ALPN certificate issuance.
 - **Basic-auth protected Traefik dashboard** on a separate hostname.
 - **Sign-ups togglable** via `VAULTWARDEN_SIGNUPS_ALLOWED`.

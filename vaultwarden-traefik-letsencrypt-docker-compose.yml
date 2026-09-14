@@ -7,7 +7,7 @@
 # the pins from these lines — this block is the single source of truth.
 x-images:
   traefik: &traefik-image ${TRAEFIK_IMAGE_TAG:-traefik:${TRAEFIK_IMAGE_VERSION:-3.7@sha256:f86a2cab1b5c649070c49f883c743dd32d8485a56e3368c5f93b9e91f1e91259}}
-  vaultwarden: &vaultwarden-image ${VAULTWARDEN_IMAGE_TAG:-vaultwarden/server:${VAULTWARDEN_IMAGE_VERSION:-1.37.2@sha256:094b5689ed81549bd293418395c7cf495ae9d960fc2d4928cef2083ef913d912}}
+  vaultwarden: &vaultwarden-image ${VAULTWARDEN_IMAGE_TAG:-vaultwarden/server:${VAULTWARDEN_IMAGE_VERSION:-1.37.3@sha256:1587c45feaa479f1f5e8af3b00eded36bff77bcf1880cf8dbf0541706dd470e0}}
 
 networks:
   vaultwarden-network:
