@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_(no unreleased changes yet)_
+### Fixed
+
+- **The restore no longer hands the data root to root.** `vaultwarden-restore-data.sh` put the paths it sets aside back with `cp -a /tmp/restore-keep/. <root>/`, which copies the directory's own owner and mode onto the data root, and the restored database was then given that owner. Vaultwarden's image runs as root by default, so no restore of this template as shipped was broken; a deployment that runs it as an unprivileged user, which Vaultwarden documents, would have come back unable to write. Kept paths now go back one by one, and nothing is copied over the root. Found by the AnythingLLM template's first restore test, where an application running as uid 1000 came back unable to write.
 
 ## [1.7.4] - 2026-10-16
 
