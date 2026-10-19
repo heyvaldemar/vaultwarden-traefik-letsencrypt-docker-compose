@@ -26,11 +26,10 @@
 # the AnythingLLM template's first restore test showed on 2026-10-19.
 #
 # WHAT IS SET ASIDE STAYS ON THE SAME FILESYSTEM. It used to go to /tmp in
-# the backups container, which is not the volume: every move there and back
-# was a copy, and the copy's page cache counts against the container's memory
-# limit. In the Ollama template, where Open WebUI's cache holds models, the
-# kernel killed the restore half way (exit 137) in three CI runs of about
-# forty. Inside the volume a move is a rename, and nothing is copied.
+# the backups container, which is not the volume, so every move there and
+# back was a copy into the container's own layer and out again. Inside the
+# volume a move is a rename: nothing is copied and nothing lands in the
+# container's layer, however large the kept paths are.
 #
 # CI runs this exact file.
 #
