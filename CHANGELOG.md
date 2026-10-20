@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_(no unreleased changes yet)_
+
+## [1.7.5] - 2026-10-20
+
 ### Fixed
 
 - **The data archive is read back before it is called a backup.** The loop renamed the `.partial` archive after `gzip -t`, which tests the compression and nothing inside it: a tar stream tar cannot read, compressed without error, passes. It now lists the whole archive with `tar -tzf` first, and one that does not list is kept as `.failed`. The fleet's conformance rule asks for this read-back and had not been reading this repository's backup loop at all: it did not recognise `tar -C … -zcpf`.
@@ -222,7 +226,8 @@ in [keycloak-traefik-letsencrypt-docker-compose](https://github.com/heyvaldemar/
   release lag); and a deploy-and-test job that boots the stack and
   requires `/alive` and the web vault to answer through Traefik.
 
-[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.4...HEAD
+[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.5...HEAD
+[1.7.5]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.4...v1.7.5
 [1.7.4]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.3...v1.7.4
 [1.7.3]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.1...v1.7.2
