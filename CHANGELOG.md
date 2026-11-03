@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_(no unreleased changes yet)_
+
+## [1.7.11] - 2026-11-03
+
 ### Changed
 
 - **`vaultwarden/server:1.37.4` moved to `vaultwarden/server:1.37.5`.** The freshness check reported the lag; the deploy job booted the stack on the new image before this landed.
@@ -258,7 +262,8 @@ in [keycloak-traefik-letsencrypt-docker-compose](https://github.com/heyvaldemar/
   release lag); and a deploy-and-test job that boots the stack and
   requires `/alive` and the web vault to answer through Traefik.
 
-[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.10...HEAD
+[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.11...HEAD
+[1.7.11]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.10...v1.7.11
 [1.7.10]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.9...v1.7.10
 [1.7.9]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.8...v1.7.9
 [1.7.8]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.7...v1.7.8
