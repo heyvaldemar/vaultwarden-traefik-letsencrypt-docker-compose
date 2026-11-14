@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_(no unreleased changes yet)_
+
+## [1.7.15] - 2026-11-14
+
 ### Security
 
 - **`traefik:3.7` was rebuilt upstream**; the pin moved from `sha256:c1ea95f3b3ea…` to `sha256:b7b1b31e6440…`. Same version, same tag, a rebuilt base image — the usual shape of a security fix in a base layer.
@@ -286,7 +290,8 @@ in [keycloak-traefik-letsencrypt-docker-compose](https://github.com/heyvaldemar/
   release lag); and a deploy-and-test job that boots the stack and
   requires `/alive` and the web vault to answer through Traefik.
 
-[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.14...HEAD
+[Unreleased]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.15...HEAD
+[1.7.15]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.14...v1.7.15
 [1.7.14]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.13...v1.7.14
 [1.7.13]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.12...v1.7.13
 [1.7.12]: https://github.com/heyvaldemar/vaultwarden-traefik-letsencrypt-docker-compose/compare/v1.7.11...v1.7.12
